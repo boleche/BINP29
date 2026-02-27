@@ -7,12 +7,13 @@
 
 ## Summary of Contents:
 
-1. 
-2. 
-3. 
-4. 
-5. 
-6. 
+1. Nextflow nf-core.
+2. Installation and Environment Setup.
+3. Working directory setup.
+4. Setting up necessary input files.
+5. Downloading reference genome.
+6. Running Nextflow.
+7. Using R to visualize count data.
 
 ## 1. Nextflow nf-core.
 
