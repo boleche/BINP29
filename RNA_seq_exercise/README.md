@@ -1,45 +1,20 @@
 # Bulk RNA Sequencing Exercise
 
->
+> Visualizing differential expression of bulk-RNA-seq transcript levels in WT and YAP/TAzdKO Schwann cells. 
+> https://nbisweden.github.io/workshop-ngsintro/2511/topics/rnaseq/lab_rnaseq.html#pca-plot
+> 
 
 
 ## Summary of Contents:
 
+1. 
+2. 
+3. 
+4. 
+5. 
+6. 
 
-
-## 1. Installation and Environment Setup:
-
-```bash
-#!/usr/bin/bash
-
-# installing nextflow in conda env
-conda create -n nextflow bioconda::nextflow
-conda activate nextflow
-
-# nextflow info
-nextflow info
-
-#   Version: 25.10.4 build 11173     
-#   Created: 10-02-2026 15:17 UTC (16:17 CEST)
-#   System: Linux 6.14.5-100.fc40.x86_64        
-#   Runtime: Groovy 4.0.28 on OpenJDK 64-Bit Server VM 23.0.2-internal-adhoc.conda.src
-#   Encoding: UTF-8 (UTF-8)
-
-# initiating rnaseq workflow
-nextflow run nf-core/rnaseq --help
-
-```
-
-
-## 2. Working directory setup:
-
-```
-
-
-
-```
-
-## 3. Nextflow nf-core.
+## 1. Nextflow nf-core.
 
 > https://nf-co.re/rnaseq/3.22.2/
 > https://github.com/nf-core/rnaseq
@@ -73,149 +48,92 @@ nextflow run nf-core/rnaseq --help
 
 ```
 
-> make samplesheet.csv
-
-| sample | fastq_1 | fastq_2 | strandedness |
-|--------|---------|---------|--------------|
-| SRR3222409_KO | SRR3222409-19_1.fq.gz | SRR3222409-19_2.fq.gz | auto |
-| SRR3222410_KO | SRR3222410-19_1.fq.gz | SRR3222410-19_2.fq.gz | auto |
-| SRR3222411_KO | SRR3222411-19_1.fq.gz | SRR3222411-19_2.fq.gz | auto |
-| SRR3222412_WT | SRR3222412-19_1.fq.gz | SRR3222412-19_2.fq.gz | auto |
-| SRR3222413_WT | SRR3222413-19_1.fq.gz | SRR3222413-19_2.fq.gz | auto |
-| SRR3222414_WT | SRR3222414-19_1.fq.gz | SRR3222414-19_2.fq.gz | auto |
-
-## 4. Downloading reference genome.
+## 2. Installation and Environment Setup:
 
 ```bash
 #!/usr/bin/bash
 
+# installing nextflow in conda env
+conda create -n nextflow bioconda::nextflow
+conda activate nextflow
+
+# exporting conda details
+conda env export > nextflow_environment.yml
+
+# nextflow info
+nextflow info
+
+#   Version: 25.10.4 build 11173     
+#   Created: 10-02-2026 15:17 UTC (16:17 CEST)
+#   System: Linux 6.14.5-100.fc40.x86_64        
+#   Runtime: Groovy 4.0.28 on OpenJDK 64-Bit Server VM 23.0.2-internal-adhoc.conda.src
+#   Encoding: UTF-8 (UTF-8)
+
+# initiating rnaseq workflow
+nextflow run nf-core/rnaseq --help
+
+```
+
+
+## 3. Working directory setup:
+
+```
+.
+├── envs
+├── reference
+├── results
+└── scripts
+
+```
+
+## 4. Setting up necessary input files.
+
+> make samplesheet.csv (no spaces and comma separated)
+
+| sample | fastq_1 | fastq_2 | strandedness |
+|--------|---------|---------|--------------|
+| SRR3222409_KO | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222409-19_1.fq.gz | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222409-19_2.fq.gz | auto |
+| SRR3222410_KO | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222410-19_1.fq.gz | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222410-19_2.fq.gz | auto |
+| SRR3222411_KO | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222411-19_1.fq.gz | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222411-19_2.fq.gz | auto |
+| SRR3222412_WT | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222412-19_1.fq.gz | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222412-19_2.fq.gz | auto |
+| SRR3222413_WT | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222413-19_1.fq.gz | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222413-19_2.fq.gz | auto |
+| SRR3222414_WT | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222414-19_1.fq.gz | /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222414-19_2.fq.gz | auto |
+
+## 5. Downloading reference genome.
+
+```bash
+#!/usr/bin/bash
+
+# placed into reference directory
 wget ftp.ensembl.org/pub/release-99/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.chromosome.19.fa.gz
 
 wget ftp.ensembl.org/pub/release-99/gtf/mus_musculus/Mus_musculus.GRCm38.99.gtf.gz
 
-
 ```
 
-## 5. Running Nextflow.
+## 6. Running Nextflow.
 
 ```bash
 #!/usr/bin/bash
 
+# from project root 
+
+# had to skip fastq validation step (with skip_linting) because there are duplicate headers in some fastq files
 nextflow run nf-core/rnaseq --input samplesheet.csv --outdir ./results --fasta ./reference/Mus_musculus.GRCm38.dna.chromosome.19.fa.gz --gtf ./reference/Mus_musculus.GRCm38.99.gtf.gz -profile singularity --skip_linting
 
 ```
-## 6. Resolving Duplicate header for read.
-ERROR ~ Error executing process > 'NFCORE_RNASEQ:RNASEQ:FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS:FQ_LINT (SRR3222410_KO)'
-
-Caused by:
-  Process `NFCORE_RNASEQ:RNASEQ:FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS:FQ_LINT (SRR3222410_KO)` terminated with an error exit status (1)
-
-
-Command executed:
-
-  fq lint \
-      --disable-validator P001 \
-      SRR3222410-19_1.fq.gz SRR3222410-19_2.fq.gz > SRR3222410_KO.fq_lint.txt
-  
-  cat <<-END_VERSIONS > versions.yml
-  "NFCORE_RNASEQ:RNASEQ:FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS:FQ_LINT":
-      fq: $(echo $(fq lint --version | sed 's/fq-lint //g'))
-  END_VERSIONS
-
-Command exit status:
-  1
-
-Command output:
-  (empty)
-
-Command error:
-  INFO:    Environment variable SINGULARITYENV_NXF_TASK_WORKDIR is set, but APPTAINERENV_NXF_TASK_WORKDIR is preferred
-  INFO:    Environment variable SINGULARITYENV_NXF_DEBUG is set, but APPTAINERENV_NXF_DEBUG is preferred
-  SRR3222410-19_1.fq.gz:333:1: [S007] DuplicateNameValidator: duplicate name: '@SRR3222410.10880'
-
-Work dir:
-  /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/work/4a/7576f78e9d0ca437f04c4fe7f76edf
-
-Container:
-  /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/work/singularity/depot.galaxyproject.org-singularity-fq-0.12.0--h9ee0642_0.img
-
-Tip: you can replicate the issue by changing to the process work dir and entering the command `bash .command.run`
-
- -- Check '.nextflow.log' file for details
-ERROR ~ Pipeline failed. Please refer to troubleshooting docs: https://nf-co.re/docs/usage/troubleshooting
-
- -- Check '.nextflow.log' file for details
-
-```bash
-#!/usr/bin/bash
-
-# check if file is corrupted
-gzip -t /home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222410-19_1.fq.gz
-
-#
-zgrep -n "@SRR3222410.10880" SRR3222410-19_1.fq.gz
-
-#
-zcat SRR3222410-19_1.fq.gz | sed -n '329,336p'
-
-```
  
+ ## 7. Using R to visualize count data.
 
- ## R.
-
- ```
- colnames
-[1] "gene_name"     "SRR3222409_KO" "SRR3222410_KO" "SRR3222411_KO" "SRR3222412_WT"
-[6] "SRR3222413_WT" "SRR3222414_WT"
-
-head
-
-                   gene_name SRR3222409_KO SRR3222410_KO SRR3222411_KO SRR3222412_WT
-ENSMUSG00000001750 "Tcirg1"  " 151.000"    " 129.001"    " 136.000"    "  242.000"  
-ENSMUSG00000003053 "Cyp2c29" "   0.000"    "   0.000"    "   0.000"    "    0.000"  
-ENSMUSG00000003228 "Grk5"    " 164.000"    " 156.000"    " 186.000"    "  242.000"  
-ENSMUSG00000003555 "Cyp17a1" "   1.000"    "   0.000"    "   0.000"    "    0.000"  
-ENSMUSG00000003559 "As3mt"   "  73.000"    "  54.000"    "  92.001"    "  113.000"  
-ENSMUSG00000003680 "Taf6l"   "  66.000"    "  37.000"    "  50.000"    "   87.000"  
-                   SRR3222413_WT SRR3222414_WT
-ENSMUSG00000001750 "  175.000"   "  165.000"  
-ENSMUSG00000003053 "    0.000"   "    0.000"  
-ENSMUSG00000003228 "  225.000"   "  239.000"  
-ENSMUSG00000003555 "    0.000"   "    0.000"  
-ENSMUSG00000003559 "   78.999"   "  105.000"  
-ENSMUSG00000003680 "   64.000"   "   53.000"  
-
-dim
-
-[1] 1394    7
-
-class
-
-[1] "matrix" "array" 
+> scripts used:\
+> dge_02.R\
+> This script will do:\
+1. Run DESeq analysis on "/results/star_salmon/salmon.merged.gene_counts.tsv"
+2. Resort by padj and produce a most differential genes tables with the 0.05 padj and log2FC of 1 cutoff.
+3. Perform a VST tranformation.
+4. Produce a Volcano plot.
+5. Produce a Heatmap. 
 
 
 
-After changing count matrix:
-
-[1] "SRR3222409_KO" "SRR3222410_KO" "SRR3222411_KO" "SRR3222412_WT" "SRR3222413_WT" "SRR3222414_WT"
-     SRR3222409_KO SRR3222410_KO SRR3222411_KO SRR3222412_WT SRR3222413_WT SRR3222414_WT
-[1,]           151           129           136           242           175           165
-[2,]             0             0             0             0             0             0
-[3,]           164           156           186           242           225           239
-[4,]             1             0             0             0             0             0
-[5,]            73            54            92           113            79           105
-[6,]            66            37            50            87            64            53
-[1] 1394    6
-[1] "matrix" "array" 
-
-[1] "SRR3222409_KO" "SRR3222410_KO" "SRR3222411_KO" "SRR3222412_WT" "SRR3222413_WT" "SRR3222414_WT"
-                   SRR3222409_KO SRR3222410_KO SRR3222411_KO SRR3222412_WT SRR3222413_WT SRR3222414_WT
-ENSMUSG00000001750           151           129           136           242           175           165
-ENSMUSG00000003053             0             0             0             0             0             0
-ENSMUSG00000003228           164           156           186           242           225           239
-ENSMUSG00000003555             1             0             0             0             0             0
-ENSMUSG00000003559            73            54            92           113            79           105
-ENSMUSG00000003680            66            37            50            87            64            53
-[1] 1394    6
-[1] "matrix" "array" 
- ```
+> ***Other scripts are included as inspiration for the final script and were not used for the analysis.***
