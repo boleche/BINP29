@@ -1,0 +1,7 @@
+sample,fastq_1,fastq_2,strandedness
+SRR3222409_KO,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222409-19_1.fq.gz,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222409-19_2.fq.gz,auto
+SRR3222410_KO,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222410-19_1.fq.gz,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222410-19_2.fq.gz,auto
+SRR3222411_KO,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222411-19_1.fq.gz,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222411-19_2.fq.gz,auto
+SRR3222412_WT,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222412-19_1.fq.gz,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222412-19_2.fq.gz,auto
+SRR3222413_WT,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222413-19_1.fq.gz,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222413-19_2.fq.gz,auto
+SRR3222414_WT,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222414-19_1.fq.gz,/home/inf-25-2025/Desktop/binp29/RNA_seq_exercise/resources/SRR3222414-19_2.fq.gz,auto

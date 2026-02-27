@@ -1,0 +1,15 @@
+# ignore contents of git version control folder (as this is already on git)
+Git_Version_Control/
+
+# ignore exams pdf 
+Exams/
+
+# ignore denovo assembly bc already on github
+denovo_assembly/
+
+# 
+surprise/
+
+
+# 
+.DS_Store
