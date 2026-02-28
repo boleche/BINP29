@@ -1,0 +1,73 @@
+
+
+1. Do you think that in a phylogenetic tree the parasites that use
+similar hosts will group together?
+
+Yes. It would make sense that resistance adapted as an evolutionary cluster. 
+
+
+2. With the new genome file, make a gene prediction. You will probably still have
+some scaffolds that derive from the bird. These should be short. Why?
+
+Short scaffolds could be misrepresenting the bird GC content (more so than long scaffolds).
+These could be assembled from poor coverage reads.
+
+3. Insert the missing data in the above table. Use bash, not internet!
+
+
+4. Compare the genome sizes with other eukaryotes and bacteria.
+Discuss with your partner (that is student partner) the reason
+for the observed genome sizes.
+
+
+5. What may cause the biased GC-contents in some of the species?
+
+
+
+6. What does the curly braces notation stand for?
+
+
+
+7. Compare how many BUSCOs (orthologues proteins) that are
+found in each proteome. Do the investigated parasites have close
+to complete numbers of BUSCOs?
+
+
+
+8. Do you think that the assembly of the Haemoproteus tartakowskyi genome is a reasonable approximation of the true
+genome?
+
+
+
+9. How many of the BUSCOs are found in all eight organisms?
+
+
+
+10. If Toxoplasma is removed, how many BUSCOs are shared among the remaining seven species. Interpret!
+
+
+11. Does all protein trees reflect the “true’ ’ species tree?
+
+12. What is the phylogenetic position of Plasmodium falciparum?
+
+13. Do you think that the GC contents have an impact on the tree
+topology?
+
+14. Do you think that the host range has an impact on the tree
+topology?
+
+15. Are the BUSCO proteins also found as orthologs in the
+proteinortho output?
+
+16. Make a script that concatenates the alignments for each organism and BUSCO into one fasta file that in the end should contain
+seven sequences. Alternatively, use bash.
+
+17. Make a tree of this “superalignment’ ’. Does it correspond to the
+consense tree?
+
+18. Run Gblocks on your BUSCO alignments.
+
+19. Compare the indel tree with the two in the earlier exercises.
+
+20. Compare your results with the published study found at the
+course web server, directory Articles.
