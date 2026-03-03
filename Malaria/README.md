@@ -97,3 +97,29 @@ gffParse.pl -i ../../resources/Ht_genome_filered -g ../Ht.gtf -b Ht_fasta -c -p
 #       There were 2222 scaffolds. This number may be higher than the one above.
 
 ```
+
+## 6. Removing genes of avian origin using BLASTx and BLASTp. 
+
+```bash
+#!/usr/bin/bash
+
+# confirming blast pathway
+echo $BLASTDB
+# /home2/resources/blastdb
+
+# running blastx on the generated fna file
+nohup blastx -db SwissProt -query ../gene_prediction_tart/fasta/Ht_fasta.fna -out Ht.blastx -num_threads 10
+
+# running blastp on the generated faa file 
+nohup blastp -db SwissProt -query ../gene_prediction_tart/fasta/Ht_fasta.faa -out Ht.blastp -num_threads 10
+
+# confirming all queries were run
+grep "Query=" Ht.blastp | wc -l
+# 3683
+grep "Query=" Ht.blastx | wc -l
+# 3683
+
+
+
+
+```
