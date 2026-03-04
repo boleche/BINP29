@@ -14,25 +14,46 @@ These could be assembled from poor coverage reads.
 
 3. Insert the missing data in the above table. Use bash, not internet!
 
+# Species	Host	Genome_size	Genes	Genomic_GC%
+Plasmodium_berghei	rodents		17954629    7235    23.7
+Plasmodium_cynomolgi	macaques	26181343    5787	39.1
+Plasmodium_falciparum	humans		23270305    5207    19.4
+Plasmodium_knowlesi	lemures		23462346    4953    37.5
+Plasmodium_vivax	humans		27007701    5682    42.2
+Plasmodium_yoelii	rodents		22222369    4919    20.8
+Haemoproteus_tartakovskyi	birds		16346860    3540    25.7
+Toxoplasma_gondii	humans		128105889   15892   52.2
 
 4. Compare the genome sizes with other eukaryotes and bacteria.
 Discuss with your partner (that is student partner) the reason
 for the observed genome sizes.
 
+The plasodium genome sizes are much smaller than typical eukaryotes. The toxoplasma gondii genome is larger than the plasmodium species but is still relatively small.
+The cause of this is likely because these are parasitic species that require a host cell to function, and therefore do not need as many internal genomic mechanisms to survive.
+Toxoplasma gondii is capable of infecting a wide range of hosts, this ability is reflected in its larger genome size.
 
 5. What may cause the biased GC-contents in some of the species?
 
+This could be their specific different abilities to infect different hosts. As genes were selected against in each species to better infect their host, this could cause the GC bias.
 
 
 6. What does the curly braces notation stand for?
 
-
+This expands each file name with the shared .faa suffix.
 
 7. Compare how many BUSCOs (orthologues proteins) that are
 found in each proteome. Do the investigated parasites have close
 to complete numbers of BUSCOs?
 
-
+# Species	Host	Genome_size	Genes	Genomic_GC%
+Plasmodium_berghei	
+Plasmodium_cynomolgi	
+Plasmodium_falciparum	
+Plasmodium_knowlesi	
+Plasmodium_vivax	
+Plasmodium_yoelii	
+Haemoproteus_tartakovskyi			
+Toxoplasma_gondii			
 
 8. Do you think that the assembly of the Haemoproteus tartakowskyi genome is a reasonable approximation of the true
 genome?

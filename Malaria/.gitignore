@@ -1,7 +1,10 @@
 #
 
 resources/
+gene_prediction/
 gene_prediction_vivax/
 .DS_Store
 gene_prediction_tart/
+host_scaffold_cleaning
 blast_ht/
+orthos/
