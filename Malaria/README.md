@@ -2,7 +2,7 @@
 
 
 ## Summary of Contents:
-1. Downloading project materials from the server.
+1. Project setup and downloading materials from the server.
 2. Gene Prediction for Plasmodium Vivax genome using GeneMark.
 3. Filtering the H. tartakovsky genome.
 4. Gene Prediction for filtered H. tartakovsky using GeneMark.
@@ -13,8 +13,9 @@
 9. Finding orthologs with proteinortho and BUSCO.
 10. Extracting one-one BUSCO sequences.
 11. Aligning sequences with Clustalo and generating trees with Raxml.
+12. Final project structure.
 
-## 1. Downloading project materials from the server.
+## 1. Project setup and downloading materials from the server.
 
 ```bash
 #!/usr/bin/bash
@@ -23,7 +24,6 @@ cp -r /home2/resources/binp29/Data/malaria .
 # any installed packages in the conda env are stored in the directory "env"
 
 ```
-
 
 ## 2. Gene Prediction for Plasmodium Vivax genome using GeneMark.
 ```bash
@@ -331,5 +331,190 @@ conda install -c bioconda figtree
 
 figtree tree.nwk
 
+
+```
+
+## 12. Final project structure.
+
+```
+.
+├── alignment_trees
+├── busco_aligned_all
+├── busco_aligned_noTg
+├── busco_fasta_files_all
+├── busco_fasta_files_noTg
+├── env
+├── gene_prediction
+│   ├── gene_prediction_others
+│   │   └── fasta
+│   ├── gene_prediction_tart
+│   │   ├── data
+│   │   │   └── training
+│   │   ├── fasta
+│   │   ├── info
+│   │   ├── output
+│   │   │   ├── data
+│   │   │   └── gmhmm
+│   │   └── run
+│   │       ├── ES_A_1
+│   │       │   └── hmmout
+│   │       ├── ES_A_2
+│   │       │   └── hmmout
+│   │       ├── ES_B_1
+│   │       │   └── hmmout
+│   │       ├── ES_C_1
+│   │       │   └── hmmout
+│   │       ├── ES_C_2
+│   │       │   └── hmmout
+│   │       ├── ES_C_3
+│   │       │   └── hmmout
+│   │       ├── ES_C_4
+│   │       │   └── hmmout
+│   │       └── ES_ini
+│   ├── gene_prediction_tart_nohost
+│   │   ├── data
+│   │   │   └── training
+│   │   ├── fasta
+│   │   ├── info
+│   │   ├── output
+│   │   │   ├── data
+│   │   │   └── gmhmm
+│   │   └── run
+│   │       ├── ES_A_1
+│   │       │   └── hmmout
+│   │       ├── ES_A_2
+│   │       │   └── hmmout
+│   │       ├── ES_B_1
+│   │       │   └── hmmout
+│   │       ├── ES_C_1
+│   │       │   └── hmmout
+│   │       ├── ES_C_2
+│   │       │   └── hmmout
+│   │       ├── ES_C_3
+│   │       │   └── hmmout
+│   │       ├── ES_C_4
+│   │       │   └── hmmout
+│   │       └── ES_ini
+│   └── gene_prediction_vivax
+│       ├── data
+│       │   └── training
+│       ├── info
+│       ├── output
+│       │   ├── data
+│       │   └── gmhmm
+│       └── run
+│           ├── ES_A_1
+│           │   └── hmmout
+│           ├── ES_A_2
+│           │   └── hmmout
+│           ├── ES_B_1
+│           │   └── hmmout
+│           ├── ES_C_1
+│           │   └── hmmout
+│           ├── ES_C_2
+│           │   └── hmmout
+│           ├── ES_C_3
+│           │   └── hmmout
+│           ├── ES_C_4
+│           │   └── hmmout
+│           └── ES_ini
+├── host_scaffold_cleaning
+│   └── blast_ht
+├── materials
+├── orthos
+│   ├── busco
+│   │   ├── busco_downloads
+│   │   │   └── lineages
+│   │   │       └── apicomplexa_odb12
+│   │   │           ├── hmms
+│   │   │           ├── info
+│   │   │           └── prfl
+│   │   ├── Ht
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   ├── Pb
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   ├── Pc
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   ├── Pf
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   ├── Pk
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   ├── Pv
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   ├── Py
+│   │   │   ├── logs
+│   │   │   └── run_apicomplexa_odb12
+│   │   │       ├── busco_sequences
+│   │   │       │   ├── fragmented_busco_sequences
+│   │   │       │   ├── multi_copy_busco_sequences
+│   │   │       │   └── single_copy_busco_sequences
+│   │   │       └── hmmer_output
+│   │   │           ├── initial_run_results
+│   │   │           └── rerun_results
+│   │   └── Tg
+│   │       ├── logs
+│   │       └── run_apicomplexa_odb12
+│   │           ├── busco_sequences
+│   │           │   ├── fragmented_busco_sequences
+│   │           │   ├── multi_copy_busco_sequences
+│   │           │   └── single_copy_busco_sequences
+│   │           └── hmmer_output
+│   │               ├── initial_run_results
+│   │               └── rerun_results
+│   ├── fasta
+│   └── proteinortho
+├── resources
+│   ├── backup_results
+│   └── plasmodium_genomes
+├── results
+└── scripts
 
 ```
