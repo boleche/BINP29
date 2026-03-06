@@ -45,29 +45,39 @@ This expands each file name with the shared .faa suffix.
 found in each proteome. Do the investigated parasites have close
 to complete numbers of BUSCOs?
 
-# Species	Host	Genome_size	Genes	Genomic_GC%
-Plasmodium_berghei	
-Plasmodium_cynomolgi	
-Plasmodium_falciparum	
-Plasmodium_knowlesi	
-Plasmodium_vivax	
-Plasmodium_yoelii	
-Haemoproteus_tartakovskyi			
-Toxoplasma_gondii			
+Counting complete and duplicated out of 481 in the lineage.
+On the lowest end ~65% of BUSCOs are represented in all organisms (excluding Tg).
+
+# Species	# of Buscos			
+Plasmodium_berghei  384
+Plasmodium_cynomolgi    468
+Plasmodium_falciparum   476
+Plasmodium_knowlesi 354
+Plasmodium_vivax    487
+Plasmodium_yoelii   473
+Haemoproteus_tartakovskyi   312	
+Toxoplasma_gondii   763(5 complete)			
 
 8. Do you think that the assembly of the Haemoproteus tartakowskyi genome is a reasonable approximation of the true
 genome?
 
-
+No. Only ~65% of Buscos are found in the assembly leaving ~35% of key genes left out of the assembly.
+This indicates data missingness.
 
 9. How many of the BUSCOs are found in all eight organisms?
 
-
+When you only look at complete BUSCOs: only 1 BUSCO is found in all 8 organisms. 
+If you look at complete and duplicated you can see 154 shared between all 8 organisms.
 
 10. If Toxoplasma is removed, how many BUSCOs are shared among the remaining seven species. Interpret!
 
+If Tg is removed you can see 182 shared BUSCOs. This makes sense given our knowledge that Tg is an outgroup.
+Especially when you compare complete only (1 busco shared vs. ~170 shared). This difference reflects evolutionary divergence.
+The 154 shared reflects conserved genes.  
 
 11. Does all protein trees reflect the “true’ ’ species tree?
+
+
 
 12. What is the phylogenetic position of Plasmodium falciparum?
 

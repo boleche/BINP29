@@ -8,3 +8,8 @@ gene_prediction_tart/
 host_scaffold_cleaning
 blast_ht/
 orthos/
+alignment_trees/
+busco_aligned_all/
+busco_aligned_noTg/
+busco_fasta_files_all/
+busco_fasta_files_noTg/

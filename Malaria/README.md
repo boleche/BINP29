@@ -238,12 +238,94 @@ ls
 conda create -n busco_env -c conda-forge -c bioconda python=3.10 busco -y
 conda install -c bioconda proteinortho
 
-# running protein ortho 
-nohup proteinortho6.pl -cpus=10 {Ht,Pb,Pc,Pf,Pk,Pv,Py,Tg}.faa > proteinortho.log 2>&1 &
-
 # for proteinortho you must remove stop *
 for f in {Ht,Pb,Pc,Pf,Pk,Pv,Py,Tg}.faa; do
   sed -i -E '/^>/! s/[^XOUBZACDEFGHIKLMNPQRSTVWYxoubzacdefghiklmnpqrstvwy]//g; /^$/d' "$f"
 done
+
+# running protein ortho 
+nohup proteinortho6.pl -cpus=10 {Ht,Pb,Pc,Pf,Pk,Pv,Py,Tg}.faa > proteinortho.log 2>&1 &
+
+
+# for busco 
+# i included Tg here and kept the same lineage so i could fairly compare the outgroup results to the rest of the organisms
+nohup bash -c '
+for f in {Ht,Pb,Pc,Pf,Pk,Pv,Py,Tg}.faa; do
+    base=$(basename "$f" .faa)
+    busco -i "../Fasta/$f" -o "$base" -m prot -l apicomplexa -c 10
+done
+' > busco_all.log 2>&1 &
+
+# inspecting busco output
+# ex for Ht 
+grep -E "Complete|Duplicated" full_table.tsv | wc -l
+# 312 BUSCOs
+
+```
+
+## 10. Extracting one-one BUSCO sequences.
+
+```bash
+#!/usr/bin/bash
+
+# i extracted duplicated and complete to try and capture as many outgroup buscos as i could 
+
+# running python script included in scripts repo
+python3 extract_buscos.py
+
+# modifying script to not include Tg (the outgroup) and running again
+python3 extract_buscos.py
+
+# with all 8 orgs
+ls | wc -l
+# 154 IDs shared
+
+# without Tg 
+ls | wc -l
+# 182 IDs shared
+
+```
+
+## 11. Aligning sequences with Clustalo and generating trees with Raxml.
+
+```bash
+#!/usr/bin/bash
+
+# running cash script included in scripts repo to iterate through all fasta busco files first for all and then for noTg
+./align_buscos.sh
+
+# modify the script to generate the alignments for witout Tg 
+./align_buscos.sh
+
+# 
+nohup bash -c 'for f in ../busco_aligned_all/*.faa; do raxmlHPC -s "$f" -n "$(basename "$f" .faa).tre" -m PROTGAMMABLOSUM62 -p 12345 -T 10 & done; wait' > raxml_all.log 2>&1 &
+
+# combining all bestTree outputs into one tree with consense from the phylip 
+conda install -c bioconda phylip
+
+# prepare input file for consense
+cat RAxML_bestTree* > all_trees.trees
+
+# merge all trees with tg as an outgroup
+consense
+# all_tree.trees
+
+# Settings for this run:
+#  C         Consensus type (MRe, strict, MR, Ml):  Majority rule (extended)
+#  O                                Outgroup root:  Yes, at species number  6
+#  R                Trees to be treated as Rooted:  No
+#  T           Terminal type (IBM PC, ANSI, none):  ANSI
+#  1                Print out the sets of species:  Yes
+#  2         Print indications of progress of run:  Yes
+#  3                               Print out tree:  Yes
+#  4               Write out trees onto tree file:  Yes
+
+# visualizing the tree with figtree
+echo "(((Pf:154.0,((Py:154.0,Pb:154.0):143.0,((Pv:154.0,Pc:154.0):104.0,Pk:154.0):128.0):49.0):101.0,Ht:154.0):154.0,Tg:154.0);" > tree.nwk
+
+conda install -c bioconda figtree
+
+figtree tree.nwk
+
 
 ```

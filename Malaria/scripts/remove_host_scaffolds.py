@@ -4,10 +4,11 @@
 """
 remove_host_scaffolds.py
 
-Description: 
+Description: Removing specified host scaffolds from the input genome fasta file. The host identified scaffold names are provided in a separate text file. The output is a new fasta file with the host identified scaffolds removed.
 
 User-defined functions:  
-    1. 
+    1. host_id_scaffolds
+    2. genome_filtering
 
 Non-standard modules: 
     Path: imported from pathlib to define working directory.
@@ -19,13 +20,17 @@ Non-standard modules:
     os: imported to split output file names by the extension.
     
 Procedure:
-    1. 
+    1. Define functions.
+    2. Establish working directory with Path.
+    3. Set up command line arguments and flags using argparse.
+    4. Inspect input files.
+    5. Filter genome.
+    6. Final message.
 
-Input: 
-Output: 
+Input: Ht_genome_filtered.genome combined_scaffolds.txt
+Output: Ht_malaria_only.genome (or specified output file name)
 
-Usage: 
-python3 remove_host_scaffolds.py Ht_genome_filtered.genome combined_scaffolds.txt Ht_malaria_only.genome
+Usage: python3 remove_host_scaffolds.py Ht_genome_filtered.genome combined_scaffolds.txt Ht_malaria_only.genome
 *** last argument is optional 
 *** -o if last argument is not given "_.genome" is used by default
 
