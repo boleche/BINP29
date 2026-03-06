@@ -1,15 +1,18 @@
 # Malaria Project
 
-> 
 
 ## Summary of Contents:
-1.
-2.
-3.
-4.
-5.
-6.
-7.
+1. Downloading project materials from the server.
+2. Gene Prediction for Plasmodium Vivax genome using GeneMark.
+3. Filtering the H. tartakovsky genome.
+4. Gene Prediction for filtered H. tartakovsky using GeneMark.
+5. Making a FASTA file using filtered H. tartakovsky gene prediction.
+6. Removing genes of avian origin using BLASTx and BLASTp. 
+7. Re-doing gene prediction on host-filtered Ht genome. 
+8. Creating .faa amino acid fasta files for each genome gtf file.
+9. Finding orthologs with proteinortho and BUSCO.
+10. Extracting one-one BUSCO sequences.
+11. Aligning sequences with Clustalo and generating trees with Raxml.
 
 ## 1. Downloading project materials from the server.
 
@@ -17,8 +20,9 @@
 #!/usr/bin/bash
 cp -r /home2/resources/binp29/Data/malaria .
 
+# any installed packages in the conda env are stored in the directory "env"
+
 ```
-> 
 
 
 ## 2. Gene Prediction for Plasmodium Vivax genome using GeneMark.

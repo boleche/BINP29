@@ -77,24 +77,39 @@ The 154 shared reflects conserved genes.
 
 11. Does all protein trees reflect the “true’ ’ species tree?
 
-
+No. Some do not even reflect Tg as the farthest ancestor. This makes sense, as mutations and divergence can differ between BUSCO genes.  
 
 12. What is the phylogenetic position of Plasmodium falciparum?
+
+Tg, as the outgroup, branches off first followed by Ht. Pf then branches off first within the plasmodium clade. 
 
 13. Do you think that the GC contents have an impact on the tree
 topology?
 
+It looks like organisms that branch off on their own have distinct GC content. 
+Organisms that form a clade together have more similar GC (like Pb and Py).
+
+
 14. Do you think that the host range has an impact on the tree
 topology?
+
+Definitely, Pb and Py form a clade together and both infect rodents. 
+While not the same, Pv and Pc both infect large mammals (humans and macqaques).
 
 15. Are the BUSCO proteins also found as orthologs in the
 proteinortho output?
 
+
+
 16. Make a script that concatenates the alignments for each organism and BUSCO into one fasta file that in the end should contain
 seven sequences. Alternatively, use bash.
 
+
+
 17. Make a tree of this “superalignment’ ’. Does it correspond to the
 consense tree?
+
+
 
 18. Run Gblocks on your BUSCO alignments.
 
