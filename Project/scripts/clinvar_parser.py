@@ -62,13 +62,13 @@ def filtered_rows(input_file:str) -> list:
 # save each filtered row as a list within a list of lists (filtered_rows)
     with open(input_file, "r") as file:
         next(file) #skip the first line with the headers
-        filtered_rows = list() #create an empty list to save the filtered rows
+        rows = list() #create an empty list to save the filtered rows
         for line in file:
             columns = line.strip().split("\t") #split the line into a list by tabs
             entries = list() #create an empty list to save the entries of interest for each line
             if (columns[1] == "single nucleotide variant" and
-                columns[6] == "Pathogenic" or columns[6] == "Likely pathogenic" and
-                columns[9] != "-" and
+                (columns[6] == "Pathogenic" or columns[6] == "Likely pathogenic") and
+                (columns[9] != "-" and columns[9] != "" and columns[9] != "-1") and
                 columns[16] == "GRCh37"):
                 entries.append(columns[1]) #append the entry to the entries list
                 entries.append(columns[4])
@@ -85,8 +85,19 @@ def filtered_rows(input_file:str) -> list:
                 entries.append(columns[31])
                 entries.append(columns[32])
                 entries.append(columns[33])
-                filtered_rows.append(entries) #append the entries list to the filtered rows list
-        return filtered_rows #return the list of filtered rows
+
+                # dominance check 
+                phenotype = columns[13].lower() #save the PhenotypeList entry for the dominance check
+                if "recessive" in phenotype:
+                    dominance = "recessive"
+                elif "dominant" in phenotype:
+                    dominance = "dominant"
+                else:
+                    dominance = "unknown"
+                entries.append(dominance) #append the dominance check result to the entries list
+
+                rows.append(entries) #append the entries list to the filtered rows list
+        return rows #return the list of filtered rows
 
 
 
@@ -203,6 +214,8 @@ with open(args.input_file, "r") as file:
             clean_headers.append(headers[31])
             clean_headers.append(headers[32])
             clean_headers.append(headers[33])
+            clean_headers.append("Dominance")
+
             break #break out of the for loop if this is satisfied
         else:
             print("- Error: The headers of interest are not in the expected location in the input file.\nExiting...")
