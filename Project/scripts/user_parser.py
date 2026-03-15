@@ -139,54 +139,59 @@ def parse_generic(user_file:str) -> pd.DataFrame:
         else:
             return parse_format4(user_file)
 
+# main function to determine file type and call the appropriate parser, returning a standardized dataframe
+def parse_user_file(user_file:str) -> pd.DataFrame:
+    file_type = check_23_ancestry(user_file)
+    if file_type == "23andMe":
+        return parse_23_andme(user_file)
+    elif file_type == "AncestryDNA":
+        return parse_ancestry(user_file)
+    else:
+        return parse_generic(user_file)
+
 
 #%%
 ###############################################################################
 # Setting up command line arguments and flags using argparse.
 ###############################################################################
 
-parser = argparse.ArgumentParser(prog="user_parser.py", description="Parse SNP files from multiple consumer genomics providers into a standardized format.")
-parser.add_argument("-i", "--input_file", required=True, help="Path to input SNP file (23andMe, AncestryDNA, or generic format).")
-parser.add_argument("-o", "--output_file", nargs="?", default="standardized_snps.tsv", help="Output file name. Default is standardized_snps.tsv")
-parser.add_argument("-d", "--output_dir", required=False, default=".", help="Output directory. Default is current directory.")
-args = parser.parse_args()
+# adding wrapper so i can call this in the app.py streamlit app without it trying to parse arguments when the app is run
+if __name__ == "__main__":
 
-# check input file exists
-try:
-    if not Path(args.input_file).exists():
-        raise Exception(f"- Error: Input file does not exist: {args.input_file}\nExiting...")
-except Exception as e:
-    print(e)
-    sys.exit()
+    parser = argparse.ArgumentParser(prog="user_parser.py", description="Parse SNP files from multiple consumer genomics providers into a standardized format.")
+    parser.add_argument("-i", "--input_file", required=True, help="Path to input SNP file (23andMe, AncestryDNA, or generic format).")
+    parser.add_argument("-o", "--output_file", nargs="?", default="standardized_snps.tsv", help="Output file name. Default is standardized_snps.tsv")
+    parser.add_argument("-d", "--output_dir", required=False, default=".", help="Output directory. Default is current directory.")
+    args = parser.parse_args()
 
-output_path = os.path.join(args.output_dir, args.output_file)
+    # check input file exists
+    try:
+        if not Path(args.input_file).exists():
+            raise Exception(f"- Error: Input file does not exist: {args.input_file}\nExiting...")
+    except Exception as e:
+        print(e)
+        sys.exit()
 
-#%%
-###############################################################################
-# Determine file type and output parsed df.
-###############################################################################
+    output_path = os.path.join(args.output_dir, args.output_file)
 
-# check if the input file is from 23andMe, AncestryDNA, or a generic format and call the appropriate parser
-file_type = check_23_ancestry(args.input_file)
+    #%%
+    ###############################################################################
+    # Determine file type and output parsed df.
+    ###############################################################################
 
-# based on the file type, call the appropriate parser function to get a standardized dataframe
-if file_type == "23andMe":
-    df = parse_23_andme(args.input_file)
-elif file_type == "AncestryDNA":
-    df = parse_ancestry(args.input_file)
-else:
-    df = parse_generic(args.input_file)
+    # check if the input file is from 23andMe, AncestryDNA, or a generic format and call the appropriate parser
+    df = parse_user_file(args.input_file)
 
 
-#%%
-###############################################################################
-# Output parsed df.
-###############################################################################
+    #%%
+    ###############################################################################
+    # Output parsed df.
+    ###############################################################################
 
-# save the standardized dataframe to a tab-delimited file
+    # save the standardized dataframe to a tab-delimited file
 
-df.to_csv(output_path, sep="\t", index=False)
-print(f"Successfully parsed {args.input_file} and saved standardized data to {output_path}")
+    df.to_csv(output_path, sep="\t", index=False)
+    print(f"Successfully parsed {args.input_file} and saved standardized data to {output_path}")
 
 
 

@@ -100,6 +100,50 @@ def determine_disease_state(zygosity: str, dominance: str, alt_allele_match: boo
     else:
         return "NA"
     
+
+# function to match user SNPs to ClinVar variants using an in-memory SQLite database for efficiency
+def match_user_to_clinvar(user_snps: pd.DataFrame, clinvar: pd.DataFrame) -> pd.DataFrame:
+    # strip rs prefix for matching
+    user_snps["rs_num"] = user_snps["rsid"].str.replace("rs", "", regex=False).astype(str)
+    clinvar["RS# (dbSNP)"] = clinvar["RS# (dbSNP)"].astype(str)
+
+    # load into in-memory SQLite and match
+    connection = sqlite3.connect(":memory:")
+    user_snps.to_sql("user_snps", connection, index=False, if_exists="replace")
+    clinvar.to_sql("clinvar", connection, index=False, if_exists="replace")
+
+    sql_match = pd.read_sql_query("""
+        SELECT
+            u.rsid,
+            u.chromosome,
+            u.position,
+            u.allele1,
+            u.allele2,
+            u.zygosity,
+            c.GeneSymbol,
+            c.ClinicalSignificance,
+            c."RS# (dbSNP)",
+            c.PhenotypeList,
+            c.Dominance,
+            c.ReferenceAlleleVCF,
+            c.AlternateAlleleVCF
+        FROM user_snps u
+        INNER JOIN clinvar c
+            ON u.rs_num = c."RS# (dbSNP)"
+            AND (u.allele1 = c.AlternateAlleleVCF OR
+                 u.allele2 = c.AlternateAlleleVCF)
+    """, connection)
+
+    if sql_match.empty:
+        return sql_match
+
+    sql_match["disease_state"] = sql_match.apply(
+        lambda r: determine_disease_state(r["zygosity"], r["Dominance"], True), axis=1
+    )
+    return sql_match
+
+
+    
 ###############################################################################
 # Setting up command line arguments and flags using argparse.
 ###############################################################################
@@ -112,104 +156,65 @@ argparse is used here to create a parser for this specific script.
     -d / --output_dir:      optional, output directory (default: current directory)
 '''
 
-parser = argparse.ArgumentParser(prog="clinvar_user_match.py", description="Match parsed user SNP data against ClinVar pathogenic variants.")
-parser.add_argument("-i", "--input_file", required=True, help="Path to parsed user SNP file (output of user_parser.py).")
-parser.add_argument("-c", "--clinvar_file", required=True, help="Path to ClinVar_parsed.tsv file.")
-parser.add_argument("-o", "--output_file", nargs="?", default="ClinVar_user_genotypes.tsv", help="Output file name. Default is ClinVar_user_genotypes.tsv")
-parser.add_argument("-d", "--output_dir", required=False, default=".", help="Output directory. Default is current directory.")
-args = parser.parse_args()
 
-for path, name in [(args.input_file, "Input file"), (args.clinvar_file, "ClinVar file")]:
-    try:
-        if not Path(path).exists():
-            raise Exception(f"- Error: {name} does not exist: {path}\nExiting...")
-    except Exception as e:
-        print(e)
-        sys.exit()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="clinvar_user_match.py", description="Match parsed user SNP data against ClinVar pathogenic variants.")
+    parser.add_argument("-i", "--input_file", required=True, help="Path to parsed user SNP file (output of user_parser.py).")
+    parser.add_argument("-c", "--clinvar_file", required=True, help="Path to ClinVar_parsed.tsv file.")
+    parser.add_argument("-o", "--output_file", nargs="?", default="ClinVar_user_genotypes.tsv", help="Output file name. Default is ClinVar_user_genotypes.tsv")
+    parser.add_argument("-d", "--output_dir", required=False, default=".", help="Output directory. Default is current directory.")
+    args = parser.parse_args()
 
-output_path = os.path.join(args.output_dir, args.output_file)
+    for path, name in [(args.input_file, "Input file"), (args.clinvar_file, "ClinVar file")]:
+        try:
+            if not Path(path).exists():
+                raise Exception(f"- Error: {name} does not exist: {path}\nExiting...")
+        except Exception as e:
+            print(e)
+            sys.exit()
 
-#%%
-###############################################################################
-# Loading in User data and parsed clinvar.
-###############################################################################
+    output_path = os.path.join(args.output_dir, args.output_file)
 
-user_snps = pd.read_csv(args.input_file, sep="\t", dtype=str)
-clinvar = load_clinvar(args.clinvar_file)
+    #%%
+    ###############################################################################
+    # Loading in User data and parsed clinvar.
+    ###############################################################################
 
-# keeping only rows where the reference and alternate alleles are different (i.e. true variants) to speed up matching and avoid false matches
-clinvar = clinvar[clinvar["ReferenceAlleleVCF"] != clinvar["AlternateAlleleVCF"]]
+    user_snps = pd.read_csv(args.input_file, sep="\t", dtype=str)
+    clinvar = load_clinvar(args.clinvar_file)
 
-# validate required user columns
-required_cols = {"rsid", "chromosome", "position", "allele1", "allele2", "zygosity"}
-missing = required_cols - set(user_snps.columns)
-if missing:
-    print(f"Error: User SNP file is missing required columns: {missing}\nExiting...")
-    sys.exit(1)
+    # keeping only rows where the reference and alternate alleles are different (i.e. true variants) to speed up matching and avoid false matches
+    clinvar = clinvar[clinvar["ReferenceAlleleVCF"] != clinvar["AlternateAlleleVCF"]]
 
-
-#%%
-###############################################################################
-# Load into SQLite db and match SNPs.
-###############################################################################
-
-# strip rs prefix for matching
-user_snps["rs_num"] = user_snps["rsid"].str.replace("rs", "", regex=False).astype(str)
-clinvar["RS# (dbSNP)"] = clinvar["RS# (dbSNP)"].astype(str)
-
-# load the user_snps and clinvar dataframes into an in-memory SQLite database
-connection = sqlite3.connect(":memory:")
-user_snps.to_sql("user_snps", connection, index=False, if_exists="replace")
-clinvar.to_sql("clinvar", connection, index=False, if_exists="replace")
+    # validate required user columns
+    required_cols = {"rsid", "chromosome", "position", "allele1", "allele2", "zygosity"}
+    missing = required_cols - set(user_snps.columns)
+    if missing:
+        print(f"Error: User SNP file is missing required columns: {missing}\nExiting...")
+        sys.exit(1)
 
 
-# query the database to find matches between the bim and clinvar tables based on rs ID and allele info
-sql_match = pd.read_sql_query("""
-    SELECT
-        u.rsid,
-        u.chromosome,
-        u.position,
-        u.allele1,
-        u.allele2,
-        u.zygosity,
-        c.GeneSymbol,
-        c.ClinicalSignificance,
-        c."RS# (dbSNP)",
-        c.PhenotypeList,
-        c.Dominance,
-        c.ReferenceAlleleVCF,
-        c.AlternateAlleleVCF
-    FROM user_snps u
-    INNER JOIN clinvar c
-        ON u.rs_num = c."RS# (dbSNP)"
-        AND (u.allele1 = c.AlternateAlleleVCF OR
-        u.allele2 = c.AlternateAlleleVCF)
-""", connection)
+    #%%
+    ###############################################################################
+    # Load into SQLite db and match SNPs.
+    ###############################################################################
 
-print(f"--Check: Matched {len(sql_match)} SNPs")
+    # match user SNPs to ClinVar variants using an in-memory SQLite database for efficiency
+    sql_match = match_user_to_clinvar(user_snps, clinvar)
 
-# if no matches were found, print a message and exit without writing an output file
-if sql_match.empty:
-    print("No matches found. Output file will not be written.")
-    sys.exit(0)
+    # if no matches were found, print a message and exit without writing an output file
+    if sql_match.empty:
+        print("No matches found. Output file will not be written.")
+        sys.exit(0)
 
 
-#%%
-###############################################################################
-# Build the output dataframe (vectorized for speed).
-###############################################################################
 
-# create a new dataframe with one row per SNP x individual
-# match the zygosity and dominance info to determine disease state for each SNP x individual
-sql_match["disease_state"] = sql_match.apply(lambda r: determine_disease_state(r["zygosity"], r["Dominance"], True), axis=1) # axis = 1 to go row by row 
+    #%%
+    ###############################################################################
+    # Saving output.
+    ###############################################################################
 
-
-#%%
-###############################################################################
-# Saving output.
-###############################################################################
-
-# save the output to a TSV file
-sql_match.to_csv(output_path, sep='\t', index=False)
-print(f"--Done: Saved {len(sql_match)} row(s) to {output_path}")
+    # save the output to a TSV file
+    sql_match.to_csv(output_path, sep='\t', index=False)
+    print(f"--Done: Saved {len(sql_match)} row(s) to {output_path}")
 

@@ -146,6 +146,6 @@ conda activate binp29_project
 pip install streamlit
 
 
-python3 scripts/compare.py -i results/user_clinvar_matches/Test4_cv_matches.tsv -a results/AADR_clinvar_matches.tsv -o Test4_comparison.tsv -d results/comparison/
+
 
 ```

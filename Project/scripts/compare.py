@@ -45,6 +45,47 @@ from pathlib import Path
 
 #%%
 ###############################################################################
+# Defining Functions.
+###############################################################################
+
+def compare_aadr_to_user(aadr_df, user_df):
+    # validate required columns
+    aadr_required = {"individual_id", "rsid", "disease_state", "GeneSymbol", "ClinicalSignificance", "PhenotypeList"}
+    user_required = {"rsid", "disease_state"}
+
+    # check if required columns are present in the dataframes
+    if not aadr_required.issubset(set(aadr_df.columns)):
+        print(f"- Error: AADR file is missing required columns: {aadr_required - set(aadr_df.columns)}\nExiting...")
+        sys.exit()
+
+    if not user_required.issubset(set(user_df.columns)):
+        print(f"- Error: User file is missing required columns: {user_required - set(user_df.columns)}\nExiting...")
+        sys.exit() 
+
+    # slim down to just the columns we need for matching and rename for clarity
+    user_slim = user_df[["rsid", "disease_state"]].rename(columns={"disease_state": "user_disease_state"})
+
+    # merge the AADR and user dataframes on rsid to find matches
+    merged = aadr_df.merge(user_slim, on="rsid", how="inner")
+
+    # rearranging output columns and renaming for clarity
+    output = merged[[
+        "individual_id",
+        "rsid",
+        "GeneSymbol",
+        "ClinicalSignificance",
+        "PhenotypeList",
+        "disease_state",
+        "user_disease_state"
+    ]].rename(columns={"disease_state": "aadr_disease_state"})
+
+    return output
+
+
+    
+
+#%%
+###############################################################################
 # Setting up command line arguments and flags using argparse.
 ###############################################################################
 
@@ -55,82 +96,49 @@ argparse is used here to create a parser for this specific script.
     -o / --output_file:     optional, output TSV file name (default: comparison_matches.tsv)
     -d / --output_dir:      optional, output directory (default: current directory)
 '''
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="compare.py", description="Compare outputs of AADR_parsing.py and clinvar_user_match.py.")
+    parser.add_argument("-i", "--input_file", required=True, help="Path to parsed user SNP file (output of clinvar_user_match.py).")
+    parser.add_argument("-a", "--aadr_file", required=True, help="Path to AADR_parsed.tsv file (output of AADR_parsing.py).")
+    parser.add_argument("-o", "--output_file", nargs="?", default="comparison_matches.tsv", help="Output file name. Default is comparison_matches.tsv")
+    parser.add_argument("-d", "--output_dir", required=False, default=".", help="Output directory. Default is current directory.")
+    args = parser.parse_args()
 
-parser = argparse.ArgumentParser(prog="compare.py", description="Compare outputs of AADR_parsing.py and clinvar_user_match.py.")
-parser.add_argument("-i", "--input_file", required=True, help="Path to parsed user SNP file (output of clinvar_user_match.py).")
-parser.add_argument("-a", "--aadr_file", required=True, help="Path to AADR_parsed.tsv file (output of AADR_parsing.py).")
-parser.add_argument("-o", "--output_file", nargs="?", default="comparison_matches.tsv", help="Output file name. Default is comparison_matches.tsv")
-parser.add_argument("-d", "--output_dir", required=False, default=".", help="Output directory. Default is current directory.")
-args = parser.parse_args()
+    for path, name in [(args.input_file, "Input file"), (args.aadr_file, "AADR file")]:
+        try:
+            if not Path(path).exists():
+                raise Exception(f"- Error: {name} does not exist: {path}\nExiting...")
+        except Exception as e:
+            print(e)
+            sys.exit()
 
-for path, name in [(args.input_file, "Input file"), (args.aadr_file, "AADR file")]:
-    try:
-        if not Path(path).exists():
-            raise Exception(f"- Error: {name} does not exist: {path}\nExiting...")
-    except Exception as e:
-        print(e)
-        sys.exit()
-
-output_path = os.path.join(args.output_dir, args.output_file)
-
-
-#%%
-###############################################################################
-# Loading in user SNPs and AADR SNPs.
-###############################################################################
+    output_path = os.path.join(args.output_dir, args.output_file)
 
 
-user = pd.read_csv(args.input_file, sep="\t", dtype=str)
-aadr = pd.read_csv(args.aadr_file, sep="\t", dtype=str)
+    #%%
+    ###############################################################################
+    # Loading in user SNPs and AADR SNPs.
+    ###############################################################################
 
-# validate required columns
-aadr_required = {"individual_id", "rsid", "disease_state", "GeneSymbol", "ClinicalSignificance", "PhenotypeList"}
-user_required = {"rsid", "disease_state"}
+    user = pd.read_csv(args.input_file, sep="\t", dtype=str)
+    aadr = pd.read_csv(args.aadr_file, sep="\t", dtype=str)
 
-# check if required columns are present in the dataframes
-if not aadr_required.issubset(set(aadr.columns)):
-    print(f"- Error: AADR file is missing required columns: {aadr_required - set(aadr.columns)}\nExiting...")
-    sys.exit()
+    #%%
+    ###############################################################################
+    # Saving output.
+    ###############################################################################
 
-if not user_required.issubset(set(user.columns)):
-    print(f"- Error: User file is missing required columns: {user_required - set(user.columns)}\nExiting...")
-    sys.exit()  
+    output = compare_aadr_to_user(aadr, user)
 
-#%%
-###############################################################################
-# Matching SNPs based on rsid.
-###############################################################################
+    # check if no matches were found before attempting to save output
+    if output.empty:
+        print("No matches found. Output file will not be written.")
+        sys.exit(0)
 
-# slim down to just the columns we need for matching and rename for clarity
-user_slim = user[["rsid", "disease_state"]].rename(columns={"disease_state": "user_disease_state"})
+    # save the output to a TSV file
+    output.to_csv(output_path, sep="\t", index=False)
 
-# merge the AADR and user dataframes on rsid to find matches
-merged = aadr.merge(user_slim, on="rsid", how="inner")
-
-# check how many matches we got and how many unique rsIDs are shared between the two datasets
-print(f"--Check: {merged['rsid'].nunique()} shared rsID(s), {len(merged)} total row(s) after join")
-
-# rearranging output columns and renaming for clarity
-output = merged[[
-    "individual_id",
-    "rsid",
-    "GeneSymbol",
-    "ClinicalSignificance",
-    "PhenotypeList",
-    "disease_state",
-    "user_disease_state"
-]].rename(columns={"disease_state": "aadr_disease_state"})
-
-
-#%%
-###############################################################################
-# Saving output.
-###############################################################################
-
-# save the output to a TSV file
-output.to_csv(output_path, sep="\t", index=False)
-
-print(f"--Done: Saved {len(output)} row(s) to {output_path}")
+    print(f"--Done: Saved {len(output)} row(s) to {output_path}")
 
 
 
