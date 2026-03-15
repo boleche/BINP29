@@ -136,3 +136,16 @@ python3 scripts/clinvar_user_match.py -i results/users_parsed/Test5_parsed.tsv -
 python3 scripts/compare.py -i results/user_clinvar_matches/Test4_cv_matches.tsv -a results/AADR_clinvar_matches.tsv -o Test4_comparison.tsv -d results/comparison/
 
 ```
+
+
+## 7. Streamlit app.
+
+```bash
+
+conda activate binp29_project
+pip install streamlit
+
+
+python3 scripts/compare.py -i results/user_clinvar_matches/Test4_cv_matches.tsv -a results/AADR_clinvar_matches.tsv -o Test4_comparison.tsv -d results/comparison/
+
+```
