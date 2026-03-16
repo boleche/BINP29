@@ -125,6 +125,7 @@ def parse_format4(user_file:str) -> pd.DataFrame:
     df = pd.read_csv(user_file, sep="\t", header=0, names=["rsid", "chromosome", "position", "allele1", "allele2"])
     df["zygosity"] = df.apply(lambda row: "Homozygous" if row["allele1"] == row["allele2"] else "Heterozygous", axis=1)
     return df[["rsid", "chromosome", "position", "allele1", "allele2", "zygosity"]]
+    
 
 # function to check format of generic file and call the appropriate parser
 def parse_generic(user_file:str) -> pd.DataFrame:
@@ -143,12 +144,19 @@ def parse_generic(user_file:str) -> pd.DataFrame:
 def parse_user_file(user_file:str) -> pd.DataFrame:
     file_type = check_23_ancestry(user_file)
     if file_type == "23andMe":
-        return parse_23_andme(user_file)
+        df = parse_23_andme(user_file)
     elif file_type == "AncestryDNA":
-        return parse_ancestry(user_file)
+        df = parse_ancestry(user_file)
     else:
-        return parse_generic(user_file)
+        df = parse_generic(user_file)
+    
+    # remove non rs ids
+    df = df[df["rsid"].str.startswith("rs")]
+    # keep only rows where both alleles are standard nucleotides
+    valid_nucs = {"A", "T", "C", "G"}
+    df = df[df["allele1"].isin(valid_nucs) & df["allele2"].isin(valid_nucs)]
 
+    return df
 
 #%%
 ###############################################################################

@@ -81,6 +81,26 @@ conda install pandas
 
 python3 scripts/AADR_parsing.py -p resources/AADR/v54.1_1240K_public -c results/ClinVar_parsed.tsv -m resources/AADR/Modern_samples.txt -o AADR_clinvar_matches.tsv -d results/
 
+#
+G_sample = G[:1000, :].compute()
+
+total = G_sample.size
+n0 = np.sum(G_sample == 0)
+n1 = np.sum(G_sample == 1)
+n2 = np.sum(G_sample == 2)
+nan = np.sum(np.isnan(G_sample))
+
+print(f"0 (ref):  {n0} ({n0/total:.2%})")
+print(f"1 (het):  {n1} ({n1/total:.2%})")
+print(f"2 (alt):  {n2} ({n2/total:.2%})")
+print(f"NaN:      {nan} ({nan/total:.2%})")
+
+
+0 (ref):  1898020 (11.53%)
+1 (het):  940995 (5.71%)
+2 (alt):  8449309 (51.31%)
+NaN:      5177676 (31.44%)
+
 
 grep "rs33451" v54.1_1240K_public.bim 
 # 3       rs33451 0.643451        42401360        2       4

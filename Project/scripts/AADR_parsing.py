@@ -43,7 +43,7 @@ Procedure:
     
 
 Input: PLINK files, ClinVar data, modern samples file
-Output: ClinVar_AADR_genotypes.tsv
+Output: AADR_parsing_matches.tsv
 
 Usage: python3 AADR_parsing.py -p <plink_prefix> -c <clinvar_file> -m <modern_samples> [-o <output_file>] [-d <output_dir>]
 Date: 2026-03-10
@@ -167,7 +167,7 @@ parser = argparse.ArgumentParser(prog='AADR_parsing.py', description='Merging Cl
 parser.add_argument('-p', '--plink_prefix', required=True, help='Path to PLINK files without extension (e.g. ../resources/AADR/v54.1_1240K_public)')
 parser.add_argument('-c', '--clinvar_file', required=True, help='Path to ClinVar_parsed.tsv file.')
 parser.add_argument('-m', '--modern_samples', required=True, help='Path to modern_samples.txt file.')
-parser.add_argument('-o', '--output_file', nargs='?', default='ClinVar_AADR_genotypes.tsv', help='Output file name. Default is ClinVar_AADR_genotypes.tsv')
+parser.add_argument('-o', '--output_file', nargs='?', default='AADR_parsing_matches.tsv', help='Output file name. Default is ClinVar_AADR_genotypes.tsv')
 parser.add_argument('-d', '--output_dir', required=False, default='.', help='Output directory. Default is current directory.')
 args = parser.parse_args()
 
@@ -200,6 +200,7 @@ output_path = os.path.join(args.output_dir, args.output_file)
 
 # load the AADR data
 G, bim, fam = load_plink_files(args.plink_prefix)
+
 
 # load clinvar data
 clinvar = load_clinvar(args.clinvar_file)

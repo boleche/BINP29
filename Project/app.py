@@ -43,19 +43,33 @@ from pathlib import Path
 ###############################################################################
 
 st.set_page_config(
-    page_title="Genetic Risk Assessment",
+    page_title="GenMore",
     page_icon="🧬",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
 
-st.title("Genetic Risk Assessment and Ancient DNA Disease Susceptibility Explorer")
-st.markdown(
-    "Upload your genetic data to explore your disease-associated variants against ClinVar "
-    "variants. Compare your results with ancient DNA samples from the AADR dataset to see how your genetic risk "
-    "compares with ancient populations." 
-)
+st.markdown("""
+    <h1 style="font-family: 'Georgia', serif; 
+               font-size: 2.5em; 
+               font-weight: bold; 
+               letter-spacing: 2px;
+               color: #2E7D8C;">
+        🧬 GenMore
+    </h1>
+    <h2 style="font-family: 'Georgia', serif;
+               font-weight: normal;
+               color: #444;">
+        Genetic Risk Assessment and Ancient DNA Disease Susceptibility Explorer
+    </h2>
+    <p style="font-family: 'Georgia', serif; font-size: 1.1em; color: #666;">
+        Upload your genetic data to explore your disease-associated variants against ClinVar variants. 
+        Compare your results with ancient DNA samples from the AADR dataset to see how your genetic 
+        risk compares with ancient populations.
+    </p>
+    <hr>
+""", unsafe_allow_html=True)
 
 
 #%%
@@ -116,7 +130,7 @@ with st.sidebar:
     st.markdown(
         "- **23andMe**: raw data file (txt format) downloaded from your 23andMe account.\n"
         "- **AncestryDNA**: raw data file (txt format) downloaded from your AncestryDNA account.\n"
-        "- **txt or csv**: file containing your genetic variants.\n"
+        "- **txt/csv/tsv**: file containing your genetic variants.\n"
         "\n\n"
         "Please ensure that your data file is in one of the accepted formats and contains the necessary information for analysis (e.g., rsIDs, genotypes)."
     )   
@@ -216,12 +230,21 @@ with tab1:
     if clinvar_matches.empty:
         st.warning("No ClinVar disease variants were found in your DNA file.")
     else:
-        st.markdown(f"**{len(clinvar_matches):,}** disease variant matches.")
-    
+        total     = len(clinvar_matches)
+        affected  = (clinvar_matches["disease_state"].str.startswith("affected")).sum()
+        carrier   = (clinvar_matches["disease_state"].str.startswith("carrier")).sum()
+        unknown   = (clinvar_matches["disease_state"].str.contains("unknown")).sum()
+        n_genes   = clinvar_matches["GeneSymbol"].nunique()
 
+        m1, m2, m3, m4, m5 = st.columns(5)
+        m1.metric("Total matches",  total)
+        m2.metric("Affected",       affected)
+        m3.metric("Carrier",        carrier)
+        m4.metric("Unknown",        unknown)
+        m5.metric("Genes involved", n_genes)
+
+        st.divider()
     
-    # display_cols = ["rsid", "GeneSymbol", "ClinicalSignificance", "PhenotypeList",
-    #                     "zygosity", "Dominance", "disease_state"]
     
     st.download_button(
         label = "Download your matched ClinVar disease variants table here.",
@@ -235,8 +258,21 @@ with tab2:
     if aadr_matches.empty:
         st.warning("No shared SNPs found between your matches and the AADR dataset.")
     else:
-        num_snps = aadr_matches["rsid"].nunique()
-        st.markdown(f"**{num_snps}** disease variant matches between your DNA and ancient individuals.")
+        n_individuals = aadr_matches["individual_id"].nunique()
+        n_snps        = aadr_matches["rsid"].nunique()
+        n_genes       = aadr_matches["GeneSymbol"].nunique()
+        both_affected = (
+            aadr_matches["aadr_disease_state"].str.startswith("affected") &
+            aadr_matches["user_disease_state"].str.startswith("affected")
+        ).sum()
+
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Shared SNPs",           n_snps)
+        m2.metric("Ancient individuals",   n_individuals)
+        m3.metric("Genes involved",        n_genes)
+        m4.metric("Both you & AADR affected", both_affected)
+
+        st.divider()
 
     st.download_button(
         label = "Download your ancient individual disease variant matches here.",

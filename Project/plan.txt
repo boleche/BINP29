@@ -22,3 +22,13 @@ divide diseases by group
 1. ref vs. alt (0 - no snp, 1 - hetero, 2 - homo alt (look at dom vs. recessive vs. neither))
 
 should i output whether on y or mt ??
+
+
+
+needs:
+
+- provide sample submission files to view
+- output a spread of all disease variants and where in the body they effect
+- explorer of all the 31 SNPs found in ancient people
+- output info about the ancient individual you share a SNP with
+- aesthetics 
