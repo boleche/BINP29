@@ -178,17 +178,12 @@ with st.sidebar:
         sample_filename = SAMPLE_FILES[sample_choice]
         sample_path     = SAMPLES_DIR / sample_filename
 
-        # checking if file exists in project dir
         if sample_path.exists():
-            sample_bytes    = sample_path.read_bytes()
-            sample_file_obj = _SampleFile(sample_bytes, sample_filename)
-            st.success(f"Sample loaded: **{sample_choice}**")
- 
-            # Sample preview expander
+            # Preview expander (unchanged)
             with st.expander("Preview sample file"):
                 try:
                     preview_df = pd.read_csv(
-                        io.BytesIO(sample_bytes),
+                        sample_path,
                         sep     = "\t",
                         comment = "#",
                         header  = 0,
@@ -197,16 +192,24 @@ with st.sidebar:
                     )
                     st.dataframe(preview_df, use_container_width=True)
                 except Exception:
-                    # fallback: show raw text lines, skipping comment lines
-                    raw_lines = sample_bytes.decode("utf-8", errors="replace").splitlines()
+                    raw_lines = sample_path.read_text(errors="replace").splitlines()
                     visible   = [l for l in raw_lines if not l.startswith("#")][:20]
                     st.code("\n".join(visible), language="text")
- 
+                    
+            # Button to confirm loading
+            if st.button("▶ Load this sample", type="primary"):
+                st.session_state["sample_confirmed"] = sample_filename
         else:
-            st.error(
-                f"Sample file not found: `samples/{sample_filename}`\n\n"
-                "Please ensure the file exists in the `samples/` directory."
-            )
+            st.error(...)
+
+    # After the sidebar block, resolve sample_file_obj from session state
+    sample_file_obj = None
+    if "sample_confirmed" in st.session_state:
+        confirmed_path = SAMPLES_DIR / st.session_state["sample_confirmed"]
+        if confirmed_path.exists():
+            sample_bytes    = confirmed_path.read_bytes()
+            sample_file_obj = _SampleFile(sample_bytes, st.session_state["sample_confirmed"])
+            st.sidebar.success(f"Sample active: **{st.session_state['sample_confirmed']}**")
 
 # file input section for user to upload their genetic data file
 st.header("Step 1: Upload Your Genetic Data")
@@ -214,11 +217,14 @@ st.header("Step 1: Upload Your Genetic Data")
 # adding in a file uploader for the user to upload their genetic data file
 uploaded_file = st.file_uploader("Choose a file", type=["txt", "csv", "tsv"], help="Accepted formats: 23andMe raw data, AncestryDNA raw data, .txt, .csv files.")
 
-# if no file is uploaded, display a message and stop the app from running further
-if not uploaded_file:
-    st.info("Waiting for file upload...")
-    st.stop()
+if uploaded_file and "sample_confirmed" in st.session_state:
+    del st.session_state["sample_confirmed"]
 
+active_file = uploaded_file or sample_file_obj
+
+if not active_file:
+    st.info("Waiting for file upload, or select a sample file from the sidebar.")
+    st.stop()
 
 #%%
 ###############################################################################
@@ -230,22 +236,17 @@ st.header("Step 2: Standardizing Your Genetic Data")
 @st.cache_data(show_spinner="Parsing your genetic data...")
 
 # function to run the existing parser functions on the uploaded file and return a standardized dataframe
-def run_parser(uploaded_file):
-    # read the uploaded file into a temporary location so it can be parsed by the existing parser functions
+def run_parser(file_name, file_bytes):
     temp_path = SCRIPTS_DIR / "temp_user_file.txt"
     with open(temp_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
+        f.write(file_bytes)
 
-    # call the parser function to parse the user file and return a standardized dataframe
     parsed_df = parse_user_file(temp_path)
-
-    # remove the temporary file after parsing
     temp_path.unlink()
-
     return parsed_df
 
 # call on the parser
-user_data = run_parser(uploaded_file)
+user_data = run_parser(active_file.name, active_file.getvalue())
 
 
 # quick validation of the parsed user data to check for required columns and display a message if any are missing
