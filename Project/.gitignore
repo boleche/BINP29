@@ -2,3 +2,6 @@ resources/
 results/
 __pycache__/
 *.pyc
+user_clinvar_matches/
+users_parsed/
+comparison/

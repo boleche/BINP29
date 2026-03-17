@@ -32,3 +32,4 @@ needs:
 - explorer of all the 31 SNPs found in ancient people
 - output info about the ancient individual you share a SNP with
 - aesthetics 
+- add a drop na line of code to clinvar user parsing

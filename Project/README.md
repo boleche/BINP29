@@ -1,10 +1,82 @@
-# Disease Susceptibility
+# GenMore Application
 
-> SQlite database (SQlite3 python package)
+> GenMore is a locally hosted application that allows users to upload their DNA SNP information to recieve ClinVar pathogenic match results. Users can then compare their disease risk associated markers with ancient individuals. 
+
+## Resource Information
+
+> Original ClinVar data can be found at: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/\
+> variant_summary.txt.gz : working version was built with the 2026-03-10 downloaded version.
+> 
+> AADR data taken from the Reich Lab at: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/FFIDCW\
+> v54.1_1240K_public\
+> The data was originally downloaded and converted to PLINK format by Eran Elhaik using the following:\
+> #Get the data\
+> wget https://reichdata.hms.harvard.edu/pub/datasets/amh_repo/curated_releases/V54/V54.1/SHARE/public.dir/v54.1_1240K_public.tar\
+> #Convertf\
+> /home/eelhaik/Tools/EIG-5.0.2/bin/convertf -p /home/eelhaik/Tools/EIG-6.0.1/CONVERTF/par.EIGENSTRAT.PED.aDNA
+>
 
 
-## Summary of Contents
+## Project Structure Information
 
+
+
+
+## Scripts Information
+
+#### Pre-Filtering Scripts
+
+```
+1. clinvar_parser.py
+    * Used to filter the variant_summary.txt file from ClinVar.
+    * SNPs only
+    * Pathogenic and Likely Pathogenic
+    * Remove missing rsIDs
+    * Keep only GRCh37 assembly (AADR dataset used GRCh37 assembly for SNPs)
+    * Derived dominance information from phenotypic description
+
+2. clinvar_check.sh
+    * Used to check that the applied filters worked as expected.
+    * Checks that all necessary columns are included.
+    * Checks all variants are SNPs.
+    * Checks only pathogenic and likely pathogenic SNPs are included.
+    * Checks there are no missing rsID entries.
+    * Checks for only Chr37 Assembly entries. 
+    
+3. AADR_parsing.py
+    * Used to parse through the PLINK AADR files and match pathogenic ancient DNA SNPs with the parsed ClinVar data.
+    * Ref allele cannot = alt allele.
+    * Matches on rsID first then on alt allele.
+    * Missing genotypes are dropped.
+    * Carrier vs. affected info is ascertained from the phenotype list content (dominance is determined and disease status reflects zygosity at the SNP).
+    * Modern individuals are excluded based on the included Modern_samples.txt individual names.
+    * Non-exact alleles dropped (ex. R).
+
+
+
+#### App Functionality Scripts
+1. user_parser.py
+    * Used to parse user input files into standardized input file format. 
+    * Handles 7 different input file types.
+
+2. clinvar_user_match.py
+    * Used to match user SNPs to ClinVar filtered pathogenic SNPs.
+    * Ref allele cannot = alt allele.
+    * Matches on rsID first then on alt allele.
+    * Carrier vs. affected info is ascertained from the phenotype list content (dominance is determined and disease status reflects zygosity at the SNP).
+
+3. compare.py
+    * Used to compare user output SNPs and ancient DNA AADR SNPs.
+    * Load AADR_parsing output and clinvar_user_match output.
+    * Merges the two datasets on rsid and individual_id.
+    * Compares disease state determinations between the two datasets.
+    * Outputs a TSV file with the comparison results.
+
+4. app.py
+    * Full script that calls on necessary functions for local app output.
+
+
+```
 
 
 
