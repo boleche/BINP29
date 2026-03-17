@@ -7,16 +7,21 @@ app.py
 Description: Streamlit app script. Run this to open the app locally.
 
 User-defined functions:  
-    1. 
+    1. from user_parser import parse_user_file
+    2. from clinvar_user_match import load_clinvar, match_user_to_clinvar
+    3. from compare import compare_aadr_to_user
 
 Non-standard modules: 
-    1. 
+    1. sys
+    2. streamlit
+    3. pandas
+    4. numpy
+    5. pathlib
+    
     
 Procedure:
     1. 
 
-Input: 
-Output:
 
 Usage: streamlit run app.py
 Name: Emma Bolech
@@ -34,7 +39,7 @@ import pandas as pd
 import numpy as np
 import pathlib
 from pathlib import Path
-
+import io
 
 
 #%%
@@ -80,6 +85,7 @@ st.markdown("""
 # define constants for data loading
 SCRIPTS_DIR = Path(__file__).parent / "scripts" 
 DATA_DIR    = Path(__file__).parent / "results"
+SAMPLES_DIR = Path(__file__).parent / "samples"
 # add scripts directory to sys.path for importing functions from scripts
 sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -124,6 +130,21 @@ clinvar_data, aadr_data = load_data()
 # Loading in user data.
 ###############################################################################
 
+# Sample files available for demo use
+SAMPLE_FILES = {"23andMe v2 (test sample)": "23andme_v2_test.txt", "Ancestry v2 (test sample)": "Ancestry.com_V2.txt"}
+
+# Define _SampleFile once here so it's available everywhere below
+class _SampleFile(io.BytesIO):
+    """Wraps a bytes buffer so it behaves like a Streamlit UploadedFile."""
+    def __init__(self, data, name):
+        super().__init__(data)
+        self.name = name
+    def getbuffer(self):
+        return memoryview(self.getvalue())
+
+sample_file_obj = None
+
+
 # adding in an information sidebar for types of user data accepted
 with st.sidebar:
     st.header("Accepted Data Formats")
@@ -135,6 +156,57 @@ with st.sidebar:
         "Please ensure that your data file is in one of the accepted formats and contains the necessary information for analysis (e.g., rsIDs, genotypes)."
     )   
 
+
+    st.divider()
+
+    # adding in the sample file section
+    st.header("🧪 Try a Sample File")
+    st.markdown(
+        "Don't have your own genetic data file? "
+        "Select a sample below to load it directly into the app."
+    )
+    
+    # adding a dropdown menu
+    sample_choice = st.selectbox(
+        "Choose a sample file",
+        options=["— None —"] + list(SAMPLE_FILES.keys()),
+        index=0,
+    )
+    
+    
+    if sample_choice != "— None —":
+        sample_filename = SAMPLE_FILES[sample_choice]
+        sample_path     = SAMPLES_DIR / sample_filename
+
+        # checking if file exists in project dir
+        if sample_path.exists():
+            sample_bytes    = sample_path.read_bytes()
+            sample_file_obj = _SampleFile(sample_bytes, sample_filename)
+            st.success(f"Sample loaded: **{sample_choice}**")
+ 
+            # Sample preview expander
+            with st.expander("Preview sample file"):
+                try:
+                    preview_df = pd.read_csv(
+                        io.BytesIO(sample_bytes),
+                        sep     = "\t",
+                        comment = "#",
+                        header  = 0,
+                        nrows   = 20,
+                        dtype   = str,
+                    )
+                    st.dataframe(preview_df, use_container_width=True)
+                except Exception:
+                    # fallback: show raw text lines, skipping comment lines
+                    raw_lines = sample_bytes.decode("utf-8", errors="replace").splitlines()
+                    visible   = [l for l in raw_lines if not l.startswith("#")][:20]
+                    st.code("\n".join(visible), language="text")
+ 
+        else:
+            st.error(
+                f"Sample file not found: `samples/{sample_filename}`\n\n"
+                "Please ensure the file exists in the `samples/` directory."
+            )
 
 # file input section for user to upload their genetic data file
 st.header("Step 1: Upload Your Genetic Data")
@@ -215,6 +287,14 @@ clinvar_matches = clinvar_match(user_data_json, clinvar_data)
 clinvar_matches_json = clinvar_matches.to_json(orient="split")
 aadr_matches = aadr_match(clinvar_matches_json, aadr_data)
 
+# show preview of the parsed clinvar data used for match
+with st.expander("See ClinVar data used for matching"):
+    st.dataframe(clinvar_data.head(50))
+
+# show preview of the AADR matched SNP data
+with st.expander("See AADR ClinVar matches used for comparison"):
+    st.dataframe(aadr_data.head(50))
+
 #%%
 ###############################################################################
 # Showing results.
@@ -245,6 +325,10 @@ with tab1:
 
         st.divider()
     
+
+    # show preview of user matched data
+    with st.expander("See preview of user matches."):
+        st.dataframe(clinvar_matches.head(50))
     
     st.download_button(
         label = "Download your matched ClinVar disease variants table here.",
@@ -273,6 +357,10 @@ with tab2:
         m4.metric("Both you & AADR affected", both_affected)
 
         st.divider()
+
+    # show preview of AADR matched data
+    with st.expander("See preview of user matches."):
+        st.dataframe(aadr_matches.head(50))
 
     st.download_button(
         label = "Download your ancient individual disease variant matches here.",
