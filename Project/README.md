@@ -5,7 +5,8 @@
 ## Resource Information
 
 > Original ClinVar data can be found at: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/\
-> variant_summary.txt.gz : working version was built with the 2026-03-10 downloaded version.
+> variant_summary.txt.gz : working version was built with the 2026-03-10 downloaded version.\
+> README: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README
 > 
 > AADR data taken from the Reich Lab at: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/FFIDCW\
 > v54.1_1240K_public\
@@ -52,9 +53,12 @@
     * Modern individuals are excluded based on the included Modern_samples.txt individual names.
     * Non-exact alleles dropped (ex. R).
 
+```
 
 
 #### App Functionality Scripts
+
+```
 1. user_parser.py
     * Used to parse user input files into standardized input file format. 
     * Handles 7 different input file types.
@@ -78,166 +82,61 @@
 
 ```
 
+## Dependencies
+
+> Dependencies are included in the envs/ folder in "plink_parsing_env.yml" and "requirements.txt".\
+> Notable packages and versions:
+
+1. pandas-plink v.2.3.2
+2. python v.3.13.11
+3. streamlit v.1.55.0
 
 
+## Pre-parsed ClinVar dataset. 
 
-## 1. Downloading datasets.
+> The ClinVar dataset was parsed prior to app running with the included script "clinvar_parser.py." The parsed output is included in the results/ folder.\
+> The successful filtering was confirmed with clinvar_check.sh.
 
-```
-
-# downloading clinvar dataset
-
-# this is updated weekly: my version was downloaded on March 10th, 2026
-
-# https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/
-
-# variant_summary.txt
-
-# readme
-# https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README
-
-# downloading given ancient DNA datasets
-1. AADR Annotations 2025.xlsx
-2. Ancient_samples.txt
-3. Modern_samples.txt
-4. v54.1_1240K_public.bed
-5. v54.1_1240K_public.bim
-6. v54.1_1240K_public.fam
-
-# downloading given test user datasets
-1. Test1_DNA + txt
-2. Test2_DNA + txt
-3. Test3_DNA + txt
-4. Test4_DNA + txt
-5. Test5_DNA + txt
-
-
-```
-
-## 2. Parsing ClinVar dataset. 
 
 ```bash
 
-# check column #
-zcat variant_summary.txt.gz | head -1 | tr '\t' '\n' | wc -l
-# 43
 
 # call on python script for parsing
 python scripts/clinvar_parser.py -f resources/variant_summary.txt -d results/
 
 ```
-## 3. checking parsed clinvar dataset.
+## Pre-parsed AADR dataset.
 
+> The AADR dataset was parsed using pandas-plink and the python script "AADR_parsing.py".\
+> The following files downloaded from the AADR database are needed to parse the ancient DNA.\
+> The AADR original files were converted to PLINK friendly files so the alternate and reference allele order were swapped.\
+> The parser handles this swap to ensure accurate alternate allele matching with ClinVar SNPs.
 
-## 4. Parsing AADR dataset.
+1. Modern_samples.txt - used to filter out modern individuals.
+2. v54.1_1240K_public.bed - used for all SNP X individual information.
+3. v54.1_1240K_public.bim - used to SNP and genotype information.
+4. v54.1_1240K_public.fam - used for all individual ID index information.
 
-https://www.ncbi.nlm.nih.gov/snp/rs33451#variant_details
-
-checking SNV # rs33451 to verify reference assembly ---> 
-
-# Variants with ambiguous alternate alleles (IUPAC codes N, R, Y) 
-# and missing alternate alleles (na) were excluded from analysis (n=34).
-
-
-I HAD to switch bim a0 to alt and a1 to ref
-
-The EIGENSTRAT .snp file format — columns 5 and 6 are reference and variant alleles respectively, so EIGENSTRAT lists ref first, alt second. Countingchromosomes
-The PLINK .bim file format — PLINK .bim does the opposite where ALT is listed in column 5 and REF in column 6. The convertf tool is not aware of this PLINK .bim format, so after converting from EIGENSTRAT to PLINK, ALT is still listed in column 6 and REF in column 5 of the .bim file. ResearchGate This is exactly your situation.
 
 ```bash
 
-conda create -n "binp29_project"
-
-conda install pandas-plink
-conda install pandas
-
+# call on python script for parsing
 python3 scripts/AADR_parsing.py -p resources/AADR/v54.1_1240K_public -c results/ClinVar_parsed.tsv -m resources/AADR/Modern_samples.txt -o AADR_clinvar_matches.tsv -d results/
 
-#
-G_sample = G[:1000, :].compute()
-
-total = G_sample.size
-n0 = np.sum(G_sample == 0)
-n1 = np.sum(G_sample == 1)
-n2 = np.sum(G_sample == 2)
-nan = np.sum(np.isnan(G_sample))
-
-print(f"0 (ref):  {n0} ({n0/total:.2%})")
-print(f"1 (het):  {n1} ({n1/total:.2%})")
-print(f"2 (alt):  {n2} ({n2/total:.2%})")
-print(f"NaN:      {nan} ({nan/total:.2%})")
-
-
-0 (ref):  1898020 (11.53%)
-1 (het):  940995 (5.71%)
-2 (alt):  8449309 (51.31%)
-NaN:      5177676 (31.44%)
-
-
-grep "rs33451" v54.1_1240K_public.bim 
-# 3       rs33451 0.643451        42401360        2       4
-
-# matches ncbi position in GRCh37.p13 chr 3	NC_000003.11:g.42401360T>C
-
-
-# peek at the 61 matched rsIDs to see what alleles look like on both sides
-test4 = pd.read_sql_query("""
-    SELECT b.rsid, b.ref_allele_nuc, b.alt_allele_nuc, 
-           c.ReferenceAlleleVCF, c.AlternateAlleleVCF
-    FROM bim b
-    INNER JOIN clinvar c ON b.rs_num = c."RS# (dbSNP)"
-""", connection)
-
-pd.set_option('display.max_rows', None)
-print(test4)
-pd.reset_option('display.max_rows')
-
-rsID + ref + alt matches:    count
-0     31
-
-
-
-
 ```
 
-## 5. Parsing user input files.
 
+## Running GenMore.
+
+> After downloading this repository to your local computer, from the project root run the following command to open GenMore locally.\
+> Ensure proper project structure as shown in the beginning of the README.\
+> The pre-parsed ClinVar and AADR datasets as well as two sample inputs are included in the project directory so no\
+> pre-filtering is needed as the user.
 
 ```bash
 
-HAD TO remove snps where alt and ref are the same 
-
-# parsing all to same format and including zygosity 
-python3 scripts/user_parser.py -i resources/TestUsers/Test1_User.txt -o Test1_parsed.tsv -d results/users_parsed/
-
-# repeat for all test users
-
-# parsing all with clinvar data to output a table with disease state information
-python3 scripts/clinvar_user_match.py -i results/users_parsed/Test1_parsed.tsv -c results/ClinVar_parsed.tsv -o Test1_cv_matches.tsv -d results/user_clinvar_matches/
-
-
-python3 scripts/clinvar_user_match.py -i results/users_parsed/Test5_parsed.tsv -c results/ClinVar_parsed.tsv -o Test5_cv_matches.tsv -d results/user_clinvar_matches/
-
-
-```
-
-## 6. Matching User Input SNPs to AADR data SNPs.
-
-```bash
-
-python3 scripts/compare.py -i results/user_clinvar_matches/Test4_cv_matches.tsv -a results/AADR_clinvar_matches.tsv -o Test4_comparison.tsv -d results/comparison/
+streamlit run app.py
 
 ```
 
 
-## 7. Streamlit app.
-
-```bash
-
-conda activate binp29_project
-pip install streamlit
-
-
-
-
-```

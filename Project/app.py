@@ -20,7 +20,11 @@ Non-standard modules:
     
     
 Procedure:
-    1. 
+    1. Set up page configuration.
+    2. Load in reference data.
+    3. Load in user data and parse to standardize.
+    4. Perform ClinVar and AADR matching.
+    5. Output results.
 
 
 Usage: streamlit run app.py
@@ -47,6 +51,7 @@ import io
 # App setup.
 ###############################################################################
 
+# setting up title and header aesthetics
 st.set_page_config(
     page_title="GenMore",
     page_icon="🧬",
@@ -55,6 +60,7 @@ st.set_page_config(
 )
 
 
+# adding the description 
 st.markdown("""
     <h1 style="font-family: 'Georgia', serif; 
                font-size: 2.5em; 
@@ -130,10 +136,10 @@ clinvar_data, aadr_data = load_data()
 # Loading in user data.
 ###############################################################################
 
-# Sample files available for demo use
+# sample files available for demo use
 SAMPLE_FILES = {"23andMe v2 (test sample)": "23andme_v2_test.txt", "Ancestry v2 (test sample)": "Ancestry.com_V2.txt"}
 
-# Define _SampleFile once here so it's available everywhere below
+# define _SampleFile once here so it's available everywhere below
 class _SampleFile(io.BytesIO):
     """Wraps a bytes buffer so it behaves like a Streamlit UploadedFile."""
     def __init__(self, data, name):
@@ -173,36 +179,27 @@ with st.sidebar:
         index=0,
     )
     
-    
+    # if the user inputs the sample file 
     if sample_choice != "— None —":
         sample_filename = SAMPLE_FILES[sample_choice]
         sample_path     = SAMPLES_DIR / sample_filename
 
         if sample_path.exists():
-            # Preview expander (unchanged)
+            # preview expander 
             with st.expander("Preview sample file"):
-                try:
-                    preview_df = pd.read_csv(
-                        sample_path,
-                        sep     = "\t",
-                        comment = "#",
-                        header  = 0,
-                        nrows   = 20,
-                        dtype   = str,
-                    )
-                    st.dataframe(preview_df, use_container_width=True)
-                except Exception:
-                    raw_lines = sample_path.read_text(errors="replace").splitlines()
-                    visible   = [l for l in raw_lines if not l.startswith("#")][:20]
-                    st.code("\n".join(visible), language="text")
+                raw_lines = sample_path.read_text(errors="replace").splitlines()
+                comment_lines = [l for l in raw_lines if l.startswith("#")]
+                data_lines = [l for l in raw_lines if not l.startswith("#")]
+                preview_lines = comment_lines + data_lines[:6]  # header row + 5 data rows
+                st.code("\n".join(preview_lines), language="text")
                     
-            # Button to confirm loading
+            # button to confirm loading
             if st.button("▶ Load this sample", type="primary"):
                 st.session_state["sample_confirmed"] = sample_filename
         else:
-            st.error(...)
+            st.error(f"Sample file not found: {sample_path}")
 
-    # After the sidebar block, resolve sample_file_obj from session state
+    # after the sidebar block, resolve sample_file_obj from session state
     sample_file_obj = None
     if "sample_confirmed" in st.session_state:
         confirmed_path = SAMPLES_DIR / st.session_state["sample_confirmed"]
@@ -217,6 +214,7 @@ st.header("Step 1: Upload Your Genetic Data")
 # adding in a file uploader for the user to upload their genetic data file
 uploaded_file = st.file_uploader("Choose a file", type=["txt", "csv", "tsv"], help="Accepted formats: 23andMe raw data, AncestryDNA raw data, .txt, .csv files.")
 
+# if the user uploads a real file clear the previously loaded sample
 if uploaded_file and "sample_confirmed" in st.session_state:
     del st.session_state["sample_confirmed"]
 
@@ -270,31 +268,39 @@ with st.expander("See parsed data"):
 
 st.header("Step 3: Identifying Disease Variants and Any Ancient DNA Matches")
 
-@st.cache_resource(show_spinner="Matching your variants against ClinVar...")
+@st.cache_data(show_spinner="Matching your variants against ClinVar...")
 
+# clinvar matching function 
 def clinvar_match(user_data, clinvar_data):
-    user_data = pd.read_json(user_data, orient="split")
     return match_user_to_clinvar(user_data, clinvar_data)
 
-@st.cache_resource(show_spinner="Matching your variants against ancient individuals...")
+@st.cache_data(show_spinner="Matching your variants against ancient individuals...")
 
-def aadr_match(clinvar_matches_json, aadr_data):
-    aadr_matches = pd.read_json(clinvar_matches_json, orient="split")
+# aadr matching function 
+def aadr_match(clinvar_matches, aadr_data):
     return compare_aadr_to_user(aadr_df=aadr_data, user_df=clinvar_matches)
     
 
-user_data_json = user_data.to_json(orient="split")
-clinvar_matches = clinvar_match(user_data_json, clinvar_data)
-clinvar_matches_json = clinvar_matches.to_json(orient="split")
-aadr_matches = aadr_match(clinvar_matches_json, aadr_data)
+clinvar_matches = clinvar_match(user_data, clinvar_data)
+aadr_matches    = aadr_match(clinvar_matches, aadr_data)
 
 # show preview of the parsed clinvar data used for match
-with st.expander("See ClinVar data used for matching"):
+with st.expander("See ClinVar data used for matching."):
     st.dataframe(clinvar_data.head(50))
+    st.download_button(
+        label="Download ClinVar reference data.",
+        data=clinvar_data.to_csv(sep="\t", index=False),
+        file_name="ClinVar_parsed.tsv"
+    )
 
 # show preview of the AADR matched SNP data
-with st.expander("See AADR ClinVar matches used for comparison"):
+with st.expander("See AADR ClinVar matches used for comparison."):
     st.dataframe(aadr_data.head(50))
+    st.download_button(
+        label="Download AADR reference data.",
+        data=aadr_data.to_csv(sep="\t", index=False),
+        file_name="AADR_clinvar_matches.tsv"
+    )
 
 #%%
 ###############################################################################
@@ -307,30 +313,58 @@ tab1, tab2 = st.tabs(["Your Disease Susceptibility", "Ancient Individual Matches
 
 ###############################################################################
 
+# adding tab 1 of user disease matches 
 with tab1:
     if clinvar_matches.empty:
         st.warning("No ClinVar disease variants were found in your DNA file.")
     else:
-        total     = len(clinvar_matches)
-        affected  = (clinvar_matches["disease_state"].str.startswith("affected")).sum()
-        carrier   = (clinvar_matches["disease_state"].str.startswith("carrier")).sum()
-        unknown   = (clinvar_matches["disease_state"].str.contains("unknown")).sum()
-        n_genes   = clinvar_matches["GeneSymbol"].nunique()
+        total       = len(clinvar_matches)
+        affected    = (clinvar_matches["disease_state"] == "affected").sum()
+        aff_unk_dom = (clinvar_matches["disease_state"] == "affected (unknown dominance)").sum()
+        total_aff   = affected + aff_unk_dom
+        pot_carrier = (clinvar_matches["disease_state"] == "potential carrier or affected (unknown dominance)").sum()
+        carrier     = (clinvar_matches["disease_state"] == "carrier").sum()
+        unaffected  = (clinvar_matches["disease_state"] == "unaffected").sum()
+        unaff_unk   = (clinvar_matches["disease_state"] == "unaffected (unknown dominance)").sum()
+        total_unaff = unaffected + unaff_unk
+        n_genes     = clinvar_matches["GeneSymbol"].nunique()
 
-        m1, m2, m3, m4, m5 = st.columns(5)
-        m1.metric("Total matches",  total)
-        m2.metric("Affected",       affected)
-        m3.metric("Carrier",        carrier)
-        m4.metric("Unknown",        unknown)
-        m5.metric("Genes involved", n_genes)
+        st.subheader("Summary:")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Total Matches", total)
+        m2.metric("Genes Involved", n_genes)
+        m3.metric("Unaffected", total_unaff)
 
         st.divider()
+
+        st.subheader("Disease States:")
+
+        m4, m5, m6, m7, m8 = st.columns(5)
+        m4.metric("Total Affected", total_aff,help="Affected + Affected (unknown dominance)")
+        m5.metric("Affected",affected)
+        m6.metric("Affected (Unknown Dominance)",aff_unk_dom)
+        m7.metric("Potential Carrier or Affected (Unknown Dom.)",pot_carrier)
+        m8.metric("Carrier", carrier)
+
+
+        st.subheader("Variant Details:")
+
+        results_table = clinvar_matches[["disease_state", "GeneSymbol", "PhenotypeList"]].copy()
+        results_table.columns = ["Disease State", "Gene", "Phenotype(s)"]
+        results_table = results_table.sort_values("Disease State").reset_index(drop=True)
+
+        st.dataframe(
+            results_table,
+            use_container_width=True,
+            hide_index=True,
+        )
     
 
     # show preview of user matched data
-    with st.expander("See preview of user matches."):
-        st.dataframe(clinvar_matches.head(50))
+    with st.expander("See more info."):
+        st.dataframe(clinvar_matches)
     
+    # adding option to downloaded expanded output info
     st.download_button(
         label = "Download your matched ClinVar disease variants table here.",
         data = clinvar_matches.to_csv(sep="\t", index=False),
@@ -339,6 +373,7 @@ with tab1:
 
 ###############################################################################
 
+# second tab for aadr matches
 with tab2:
     if aadr_matches.empty:
         st.warning("No shared SNPs found between your matches and the AADR dataset.")
@@ -352,17 +387,30 @@ with tab2:
         ).sum()
 
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Shared SNPs",           n_snps)
-        m2.metric("Ancient individuals",   n_individuals)
-        m3.metric("Genes involved",        n_genes)
+        m1.metric("Shared SNPs", n_snps)
+        m2.metric("Ancient individuals", n_individuals)
+        m3.metric("Genes involved", n_genes)
         m4.metric("Both you & AADR affected", both_affected)
 
         st.divider()
 
-    # show preview of AADR matched data
-    with st.expander("See preview of user matches."):
-        st.dataframe(aadr_matches.head(50))
+        st.subheader("Match Details:")
 
+        results_table = aadr_matches[["individual_id", "aadr_disease_state", "user_disease_state", "GeneSymbol", "PhenotypeList"]].copy()
+        results_table.columns = ["Ancient Individual", "AADR Disease State", "Your Disease State", "Gene", "Phenotype(s)"]
+        results_table = results_table.sort_values("Ancient Individual").reset_index(drop=True)
+
+        st.dataframe(
+            results_table,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    # show preview of AADR matched data
+    with st.expander("See more info."):
+        st.dataframe(aadr_matches)
+
+    # downloading expanded output info
     st.download_button(
         label = "Download your ancient individual disease variant matches here.",
         data = aadr_matches.to_csv(sep="\t", index=False),
